@@ -1,17 +1,28 @@
+import { useParams } from "react-router";
+import * as db from "../../Database";
 export default function AssignmentEditor() {
+    const { cid, aid } = useParams();
+    const assignments = db.assignments;
+
+    const assignment = assignments.find((assignment) => assignment._id === aid);
+
+    if (!assignment) {
+        return <div>Assignment not found</div>;
+    }
+
     return (
         <div id="wd-assignments-editor" className="container">
             <div className="mb-3">
                 <label htmlFor="wd-name" className="form-label"><b>Assignment Name</b></label>
-                <input id="wd-name" className="form-control" defaultValue="A1" />
+                <input id="wd-name" className="form-control" defaultValue={assignment.title}/>
             </div>
 
             <div className="mb-3">
-                <textarea 
-                    id="wd-description" 
-                    className="form-control" 
+                <textarea
+                    id="wd-description"
+                    className="form-control"
                     rows={6}
-                    defaultValue="The assignment is available online. Submit a link to the landing page of your Web application running on Netlify. The landing page should include the following: Your full name and section Links to each of the lab assignments Link to the Kanbas application Links to all relevant source code repositories The Kanbas application should include a link to navigate back to the landing page."
+                    defaultValue={assignment.description}
                 />
             </div>
 
@@ -20,7 +31,7 @@ export default function AssignmentEditor() {
                     <label htmlFor="wd-points" className="form-label">Points</label>
                 </div>
                 <div className="col-md-9">
-                    <input id="wd-points" className="form-control" defaultValue={100} />
+                    <input id="wd-points" className="form-control" defaultValue={assignment.points} />
                 </div>
             </div>
 
@@ -97,13 +108,13 @@ export default function AssignmentEditor() {
 
                         <div className="mb-3">
                             <label htmlFor="wd-due-date" className="form-label">Due</label>
-                            <input type="date" id="wd-due-date" className="form-control" defaultValue="2024-05-13" />
+                            <input type="date" id="wd-due-date" className="form-control" defaultValue={assignment.due_date} />
                         </div>
 
                         <div className="row mb-3">
                             <div className="col-md-6">
                                 <label htmlFor="wd-available-from" className="form-label">Available from</label>
-                                <input type="datetime-local" id="wd-available-from" className="form-control" defaultValue="2024-05-06T12:00" />
+                                <input type="datetime-local" id="wd-available-from" className="form-control" defaultValue={assignment.available_date} />
                             </div>
 
                             <div className="col-md-6">

@@ -1,73 +1,30 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
 export default function CoursesNavigation() {
-    const location = useLocation();
+  const location = useLocation();
+  const { cid } = useParams(); // Get the course ID from the URL params
 
-    return (
-        <div id="wd-courses-navigation" className="wd list-group fs-5 rounded-0">
-            <Link
-                id="wd-course-home-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/Home") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/Home"
-            >
-                Home
-            </Link><br />
+  const links = ["Home", "Modules", "Piazza", "Zoom", "Assignments", "Quizzes", "Grades", "People"];
 
-            <Link
-                id="wd-course-modules-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/Modules") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/Modules"
-            >
-                Modules
-            </Link><br />
+  return (
+    <div id="wd-courses-navigation" className="wd list-group fs-5 rounded-0">
+      {links.map((link) => {
+        const lowerCaseLink = link.toLowerCase(); // Convert the link name to lowercase for the URL
+        const isActive =
+          location.pathname.includes(`/Kanbas/Courses/${cid}/`) &&
+          location.pathname.includes(`/${link}`);
 
-            <Link
-                id="wd-course-piazza-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/Piazza") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/Piazza"
-            >
-                Piazza
-            </Link><br />
-
-            <Link
-                id="wd-course-zoom-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/Zoom") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/Zoom"
-            >
-                Zoom
-            </Link><br />
-
-            <Link
-                id="wd-course-assignments-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/Assignments") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/Assignments"
-            >
-                Assignments
-            </Link><br />
-
-            <Link
-                id="wd-course-quizzes-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/Quizzes") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/Quizzes"
-            >
-                Quizzes
-            </Link><br />
-
-            <Link
-                id="wd-course-grades-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/Grades") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/Grades"
-            >
-                Grades
-            </Link><br />
-
-            <Link
-                id="wd-course-people-link"
-                className={`list-group-item border border-0 ${location.pathname.includes("/Kanbas/Courses/") && location.pathname.includes("/People") ? "active" : "text-danger"}`}
-                to="/Kanbas/Courses/1234/People"
-            >
-                People
-            </Link><br />
-        </div>
-    );
+        return (
+          <Link
+            key={link}
+            id={`wd-course-${lowerCaseLink}-link`}
+            className={`list-group-item border border-0 ${isActive ? "active" : "text-danger"}`}
+            to={`/Kanbas/Courses/${cid}/${link}`}
+          >
+            {link}
+          </Link>
+        );
+      })}
+    </div>
+  );
 }
