@@ -1,4 +1,5 @@
 import { useParams } from "react-router";
+import { Link } from "react-router-dom";
 import * as db from "../../Database";
 export default function AssignmentEditor() {
     const { cid, aid } = useParams();
@@ -129,8 +130,12 @@ export default function AssignmentEditor() {
             <hr />
 
             <div className="d-flex justify-content-end">
-                <button type="button" className="btn btn-light me-2">Cancel</button>
-                <button type="submit" className="btn btn-danger">Save</button>
+                <Link to={`/Kanbas/Courses/${cid}/Assignments`} className="btn btn-light me-2">
+                    Cancel
+                </Link>
+                <Link to={`/Kanbas/Courses/${cid}/Assignments`} className="btn btn-danger">
+                    Save
+                </Link>
             </div>
         </div>
     );
