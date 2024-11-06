@@ -10,22 +10,32 @@ import SimpleArrays from "./SimpleArrays";
 import TernaryOperator from "./TernaryOperator";
 import VariablesAndConstants from "./VariablesAndConstants";
 import VariableTypes from "./VariableTypes";
+import { useSelector } from "react-redux";
 export default function Lab3() {
+  const { todos } = useSelector((state: any) => state.todosReducer);
   return (
     <div>
       <h2>Lab 3</h2>
-      <VariablesAndConstants/>
-      <VariableTypes/>
-      <BooleanVariables/>
-      <TernaryOperator/>
-      <ConditionalOutputInline/>
-      <LegacyFunctions/>
-      <SimpleArrays/>
-      <AddingAndRemovingToFromArrays/>
-      <MapFunction/>
-      <House/>
-      <Destructing/>
-      <Classes/>
+      <ul className="list-group">
+        {todos.map((todo: any) => (
+          <li className="list-group-item" key={todo.id}>
+            {todo.title}
+          </li>
+        ))}
+      </ul>
+      <hr />
+      <VariablesAndConstants />
+      <VariableTypes />
+      <BooleanVariables />
+      <TernaryOperator />
+      <ConditionalOutputInline />
+      <LegacyFunctions />
+      <SimpleArrays />
+      <AddingAndRemovingToFromArrays />
+      <MapFunction />
+      <House />
+      <Destructing />
+      <Classes />
     </div>
   );
 }
