@@ -47,7 +47,7 @@ export default function KanbasNavigation() {
       </Link>
       {links.map((link) => (
         <Link
-          key={link.path} // Ensure unique key
+          key={`${link.path}-${link.label}`} // Ensure unique key
           to={link.path}
           className={`list-group-item bg-black text-center border-0
             ${

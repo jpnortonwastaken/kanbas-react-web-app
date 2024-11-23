@@ -1,10 +1,17 @@
 // src/Kanbas/Dashboard/index.tsx
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import * as db from "./Database";
 import FacultyOnly from "./Account/FacultyOnly";
 import StudentsOnly from "./Account/StudentsOnly";
-import { toggleShowAllCourses, enroll, unenroll } from "./enrollmentsReducer";
+import {
+  toggleShowAllCourses,
+  enroll,
+  unenroll,
+  setEnrollments,
+} from "./enrollmentsReducer";
+import * as enrollmentsClient from "./Courses/Enrollments/client";
+import * as coursesClient from "./Courses/client";
 
 interface Course {
   _id: string;
@@ -15,13 +22,10 @@ interface Course {
   description: string;
 }
 
-interface DashboardProps {
-  courses: Course[];
-  course: Course;
-  setCourse: (course: Course) => void;
-  addNewCourse: () => void;
-  deleteCourse: (courseId: string) => void;
-  updateCourse: () => void;
+interface Enrollment {
+  _id: string;
+  user: string;
+  course: string;
 }
 
 export default function Dashboard({
@@ -31,7 +35,14 @@ export default function Dashboard({
   addNewCourse,
   deleteCourse,
   updateCourse,
-}: DashboardProps) {
+}: {
+  courses: Course[];
+  course: Course;
+  setCourse: (course: Course) => void;
+  addNewCourse: () => void;
+  deleteCourse: (courseId: string) => void;
+  updateCourse: () => void;
+}) {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const { enrollments, showAllCourses } = useSelector(
@@ -39,22 +50,61 @@ export default function Dashboard({
   );
 
   const enrolledCourseIds = enrollments
-    .filter((e: any) => e.user === currentUser?._id)
-    .map((e: any) => e.course);
+    .filter((e: Enrollment) => e.user === currentUser?._id)
+    .map((e: Enrollment) => e.course);
 
   const displayedCourses =
     currentUser?.role === "STUDENT" && !showAllCourses
       ? courses.filter((c) => enrolledCourseIds.includes(c._id))
       : courses;
 
-  const handleEnrollToggle = (courseId: string, event: React.MouseEvent) => {
+  const handleEnrollToggle = async (
+    courseId: string,
+    event: React.MouseEvent
+  ) => {
     event.preventDefault();
-    if (enrolledCourseIds.includes(courseId)) {
-      dispatch(unenroll({ userId: currentUser._id, courseId }));
-    } else {
-      dispatch(enroll({ userId: currentUser._id, courseId }));
+    try {
+      if (!currentUser) {
+        console.error("No current user");
+        return;
+      }
+
+      console.log("Attempting enrollment toggle for:", {
+        userId: currentUser._id,
+        courseId,
+      });
+
+      if (enrolledCourseIds.includes(courseId)) {
+        console.log("Unenrolling...");
+        await enrollmentsClient.unenrollFromCourse(currentUser._id, courseId);
+        dispatch(unenroll({ userId: currentUser._id, courseId }));
+      } else {
+        console.log("Enrolling...");
+        const newEnrollment = await enrollmentsClient.enrollInCourse(
+          currentUser._id,
+          courseId
+        );
+        dispatch(enroll(newEnrollment));
+      }
+    } catch (error) {
+      console.error("Enrollment toggle failed:", error);
     }
   };
+
+  useEffect(() => {
+    const loadEnrollments = async () => {
+      if (currentUser?._id) {
+        try {
+          const userEnrollments =
+            await enrollmentsClient.fetchEnrollmentsForUser(currentUser._id);
+          dispatch(setEnrollments(userEnrollments));
+        } catch (error) {
+          console.error("Failed to load enrollments:", error);
+        }
+      }
+    };
+    loadEnrollments();
+  }, [currentUser]);
 
   return (
     <div id="wd-dashboard">
