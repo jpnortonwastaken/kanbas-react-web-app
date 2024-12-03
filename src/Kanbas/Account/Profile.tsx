@@ -32,7 +32,7 @@ export default function Profile() {
           <input
             defaultValue={profile.username}
             id="wd-username"
-            className="form-control mb-2"
+            className="mb-2 form-control"
             onChange={(e) =>
               setProfile({ ...profile, username: e.target.value })
             }
@@ -40,7 +40,7 @@ export default function Profile() {
           <input
             defaultValue={profile.password}
             id="wd-password"
-            className="form-control mb-2"
+            className="mb-2 form-control"
             onChange={(e) =>
               setProfile({ ...profile, password: e.target.value })
             }
@@ -48,7 +48,7 @@ export default function Profile() {
           <input
             defaultValue={profile.firstName}
             id="wd-firstname"
-            className="form-control mb-2"
+            className="mb-2 form-control"
             onChange={(e) =>
               setProfile({ ...profile, firstName: e.target.value })
             }
@@ -56,7 +56,7 @@ export default function Profile() {
           <input
             defaultValue={profile.lastName}
             id="wd-lastname"
-            className="form-control mb-2"
+            className="mb-2 form-control"
             onChange={(e) =>
               setProfile({ ...profile, lastName: e.target.value })
             }
@@ -64,19 +64,19 @@ export default function Profile() {
           <input
             defaultValue={profile.dob}
             id="wd-dob"
-            className="form-control mb-2"
+            className="mb-2 form-control"
             onChange={(e) => setProfile({ ...profile, dob: e.target.value })}
             type="date"
           />
           <input
             defaultValue={profile.email}
             id="wd-email"
-            className="form-control mb-2"
+            className="mb-2 form-control"
             onChange={(e) => setProfile({ ...profile, email: e.target.value })}
           />
           <select
             onChange={(e) => setProfile({ ...profile, role: e.target.value })}
-            className="form-control mb-2"
+            className="mb-2 form-control"
             id="wd-role"
           >
             <option value="USER">User</option>{" "}
@@ -86,14 +86,14 @@ export default function Profile() {
           </select>
           <button
             onClick={updateProfile}
-            className="btn btn-primary w-100 mb-2"
+            className="mb-2 btn btn-primary w-100"
           >
             {" "}
             Update{" "}
           </button>
           <button
             onClick={signout}
-            className="btn btn-danger w-100 mb-2"
+            className="mb-2 btn btn-danger w-100"
             id="wd-signout-btn"
           >
             Sign out
