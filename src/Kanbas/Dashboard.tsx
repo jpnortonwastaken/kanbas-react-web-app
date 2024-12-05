@@ -140,7 +140,7 @@ export default function Dashboard({
         </h5>
         <input
           value={course.name}
-          className="form-control mb-2"
+          className="mb-2 form-control"
           onChange={(e) => setCourse({ ...course, name: e.target.value })}
         />
         <textarea
@@ -167,7 +167,7 @@ export default function Dashboard({
               className="wd-dashboard-course col"
               style={{ width: "300px" }}
             >
-              <div className="card rounded-3 overflow-hidden">
+              <div className="overflow-hidden card rounded-3">
                 <Link
                   to={
                     currentUser?.role === "STUDENT" &&
@@ -188,7 +188,7 @@ export default function Dashboard({
                       {course.name}
                     </h5>
                     <p
-                      className="wd-dashboard-course-title card-text overflow-y-hidden"
+                      className="overflow-y-hidden wd-dashboard-course-title card-text"
                       style={{ maxHeight: 100 }}
                     >
                       {course.description}

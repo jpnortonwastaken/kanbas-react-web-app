@@ -17,7 +17,7 @@ export default function Kanbas() {
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const fetchCourses = async () => {
     try {
-      const courses = await userClient.findMyCourses();
+      const courses = await courseClient.fetchAllCourses();
       setCourses(courses);
     } catch (error) {
       console.error(error);
@@ -35,7 +35,7 @@ export default function Kanbas() {
     description: "New Description",
   });
   const addNewCourse = async () => {
-    const newCourse = await userClient.createCourse(course);
+    const newCourse = await courseClient.createCourse(course);
     setCourses([...courses, newCourse]);
   };
   const deleteCourse = async (courseId: string) => {
@@ -58,7 +58,7 @@ export default function Kanbas() {
     <Session>
       <div id="wd-kanbas">
         <KanbasNavigation />
-        <div className="wd-main-content-offset p-3">
+        <div className="p-3 wd-main-content-offset">
           <Routes>
             <Route path="/" element={<Navigate to="Dashboard" />} />
             <Route path="/Account/*" element={<Account />} />
