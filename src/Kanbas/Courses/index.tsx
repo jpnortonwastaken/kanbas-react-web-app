@@ -6,6 +6,8 @@ import Modules from "./Modules";
 import Assignments from "./Assignments";
 import AssignmentEditor from "./Assignments/Editor";
 import PeopleTable from "./People/Table";
+import Users from "../Account/Users";
+
 export default function Courses({ courses }: { courses: any[] }) {
   const { cid } = useParams();
   const course = courses.find((course) => course._id === cid);
@@ -13,7 +15,7 @@ export default function Courses({ courses }: { courses: any[] }) {
   return (
     <div id="wd-courses">
       <h2 className="text-danger">
-        <FaAlignJustify className="me-4 fs-4 mb-1" />
+        <FaAlignJustify className="mb-1 me-4 fs-4" />
         {course && course.name} &gt; {pathname.split("/")[4]}
       </h2>{" "}
       <hr />
@@ -28,7 +30,7 @@ export default function Courses({ courses }: { courses: any[] }) {
             <Route path="Modules" element={<Modules />} />
             <Route path="Assignments" element={<Assignments />} />
             <Route path="Assignments/:aid" element={<AssignmentEditor />} />
-            <Route path="People" element={<PeopleTable />} />
+            <Route path="People" element={<Users />} />
           </Routes>
         </div>
       </div>
