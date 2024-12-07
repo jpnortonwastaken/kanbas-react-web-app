@@ -10,6 +10,7 @@ import {
   setEnrollments,
 } from "./enrollmentsReducer";
 import * as enrollmentsClient from "./Courses/Enrollments/client";
+import StudentsOrFacultyOnly from "./Account/StudentsOrFacultyOnly";
 
 interface Course {
   _id: string;
@@ -52,7 +53,8 @@ export default function Dashboard({
     .map((e: Enrollment) => e.course);
 
   const displayedCourses =
-    currentUser?.role === "STUDENT" && !showAllCourses
+    (currentUser?.role === "STUDENT" || currentUser?.role === "FACULTY") &&
+    !showAllCourses
       ? courses.filter((c) => enrolledCourseIds.includes(c._id))
       : courses;
 
@@ -119,18 +121,29 @@ export default function Dashboard({
     });
   };
 
+  const handleAddCourse = async () => {
+    await addNewCourse();
+    // Reload enrollments only after course is added
+    if (currentUser?._id) {
+      const userEnrollments = await enrollmentsClient.fetchEnrollmentsForUser(
+        currentUser._id
+      );
+      dispatch(setEnrollments(userEnrollments));
+    }
+  };
+
   return (
     <div id="wd-dashboard">
       <div className="d-flex justify-content-between align-items-center">
         <h1 id="wd-dashboard-title">Dashboard</h1>
-        <StudentsOnly>
+        <StudentsOrFacultyOnly>
           <button
             className="btn btn-primary"
             onClick={() => dispatch(toggleShowAllCourses())}
           >
             {showAllCourses ? "Show Enrolled" : "Show All Courses"}
           </button>
-        </StudentsOnly>
+        </StudentsOrFacultyOnly>
       </div>
       <hr />
       <FacultyOnly>
@@ -139,7 +152,7 @@ export default function Dashboard({
           <button
             className="btn btn-primary float-end"
             id="wd-add-new-course-click"
-            onClick={addNewCourse}
+            onClick={handleAddCourse}
           >
             Add
           </button>
@@ -171,7 +184,8 @@ export default function Dashboard({
       </FacultyOnly>
       <hr />
       <h2 id="wd-dashboard-published">
-        {currentUser?.role === "STUDENT" && !showAllCourses
+        {(currentUser?.role === "STUDENT" || currentUser?.role === "FACULTY") &&
+        !showAllCourses
           ? "Enrolled Courses"
           : "Published Courses"}{" "}
         ({displayedCourses.length})
@@ -211,7 +225,7 @@ export default function Dashboard({
                     >
                       {course.description}
                     </p>
-                    <StudentsOnly>
+                    <StudentsOrFacultyOnly>
                       <button
                         onClick={(e) => handleEnrollToggle(course._id, e)}
                         className={`btn ${
@@ -224,7 +238,7 @@ export default function Dashboard({
                           ? "Unenroll"
                           : "Enroll"}
                       </button>
-                    </StudentsOnly>
+                    </StudentsOrFacultyOnly>
                     <FacultyOnly>
                       <button className="btn btn-primary">Go</button>
                       <button
