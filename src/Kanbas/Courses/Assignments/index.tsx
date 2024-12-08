@@ -35,7 +35,9 @@ export default function Assignments() {
 
   return (
     <div className="wd-assignments">
-      <AssignmentsControls cid={cid || ""} />
+      <FacultyOnly>
+        <AssignmentsControls cid={cid || ""} />
+      </FacultyOnly>
       <br /> {/* Keep just one br for minimal spacing */}
       <ul id="wd-assignments" className="list-group rounded-0">
         <li className="wd-module list-group-item p-0 mb-5 fs-5 border-gray">
