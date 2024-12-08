@@ -27,9 +27,6 @@ export default function QuizControlButtons({
         }}
         style={{ cursor: "pointer" }}
       />
-      <GreenCheckmark />
-      <FaPlus className="mx-3 fs-4" />
-      <IoEllipsisVertical className="fs-4" />
     </div>
   );
 }
