@@ -1,24 +1,37 @@
 import { useParams } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import { setQuiz, deleteQuiz } from "./reducer";
+import { setQuiz, deleteQuiz, updateQuiz } from "./reducer"; // Add updateQuiz import
 import { BsGripVertical } from "react-icons/bs";
 import { FaCaretDown } from "react-icons/fa";
-import { IoEllipsisVertical } from "react-icons/io5";
+import { IoEllipsisVertical, IoCloseCircle } from "react-icons/io5"; // Add this import
 import FacultyOnly from "../../Account/FacultyOnly";
 import QuizControls from "./QuizControls";
 import QuizControlButtons from "./QuizControlButtons";
 import { useState, useEffect } from "react";
 import * as coursesClient from "../client";
 import * as quizzesClient from "./client";
+import GreenCheckmark from "../Modules/GreenCheckmark";
 
 export default function Quizzes() {
   const { cid } = useParams();
+  const currentUser = useSelector(
+    (state: any) => state.accountReducer.currentUser
+  );
+  const isStudent = currentUser?.role === "STUDENT";
+
   const quizzes = useSelector(
     (state: any) =>
-      state.quizzesReducer?.quizzes?.filter(
-        (quiz: any) => quiz.courseId === cid
-      ) || []
+      state.quizzesReducer?.quizzes?.filter((quiz: any) => {
+        const isCourseQuiz = quiz.courseId === cid;
+
+        if (isStudent) {
+          return isCourseQuiz && quiz.published;
+        }
+
+        return isCourseQuiz;
+      }) || []
   );
+
   const dispatch = useDispatch();
 
   const removeQuiz = async (quizId: string) => {
@@ -31,6 +44,43 @@ export default function Quizzes() {
     dispatch(setQuiz(quizzes));
   };
 
+  const togglePublish = async (quiz: any) => {
+    const updatedQuiz = {
+      ...quiz,
+      published: !quiz.published,
+    };
+    await quizzesClient.updateQuiz(updatedQuiz);
+    dispatch(updateQuiz(updatedQuiz));
+  };
+
+  const publishAll = async () => {
+    const updatedQuizzes = await Promise.all(
+      quizzes.map(async (quiz: any) => {
+        if (!quiz.published) {
+          const updatedQuiz = { ...quiz, published: true };
+          await quizzesClient.updateQuiz(updatedQuiz);
+          return updatedQuiz;
+        }
+        return quiz;
+      })
+    );
+    dispatch(setQuiz(updatedQuizzes));
+  };
+
+  const unpublishAll = async () => {
+    const updatedQuizzes = await Promise.all(
+      quizzes.map(async (quiz: any) => {
+        if (quiz.published) {
+          const updatedQuiz = { ...quiz, published: false };
+          await quizzesClient.updateQuiz(updatedQuiz);
+          return updatedQuiz;
+        }
+        return quiz;
+      })
+    );
+    dispatch(setQuiz(updatedQuizzes));
+  };
+
   useEffect(() => {
     fetchQuizzes();
   }, [cid]);
@@ -38,7 +88,11 @@ export default function Quizzes() {
   return (
     <div className="wd-quizzes">
       <FacultyOnly>
-        <QuizControls cid={cid || ""} />
+        <QuizControls
+          cid={cid || ""}
+          publishAll={publishAll}
+          unpublishAll={unpublishAll}
+        />
       </FacultyOnly>
       <br />
       <ul id="wd-quizzes" className="list-group rounded-0">
@@ -62,7 +116,24 @@ export default function Quizzes() {
                   <div className="d-flex align-items-center">
                     <BsGripVertical className="me-2 fs-3" />
                     <div>
-                      <div className="fw-bold">{quiz.title}</div>
+                      <div className="fw-bold">
+                        {quiz.title}
+                        <FacultyOnly>
+                          {quiz.published ? (
+                            <GreenCheckmark
+                              className="ms-2"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => togglePublish(quiz)}
+                            />
+                          ) : (
+                            <IoCloseCircle
+                              className="ms-2 text-danger"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => togglePublish(quiz)}
+                            />
+                          )}
+                        </FacultyOnly>
+                      </div>
                       <div className="text-muted">
                         <span className="text-danger">{quiz.type}</span> |
                         <b> Due</b>{" "}
@@ -75,7 +146,9 @@ export default function Quizzes() {
                     <QuizControlButtons
                       quizId={quiz._id}
                       courseId={cid || ""}
+                      quiz={quiz}
                       deleteQuiz={removeQuiz}
+                      togglePublish={togglePublish}
                     />
                   </FacultyOnly>
                 </div>

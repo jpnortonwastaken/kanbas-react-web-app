@@ -35,7 +35,7 @@ export default function QuizEditor() {
   );
 
   const [formData, setFormData] = useState({
-    title: "",
+    title: "New Quiz",
     description: "",
     type: "GRADED_QUIZ",
     points: "100",

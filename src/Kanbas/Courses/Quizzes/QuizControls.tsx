@@ -3,8 +3,17 @@ import { FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import GreenCheckmark from "../Modules/GreenCheckmark";
 import FacultyOnly from "../../Account/FacultyOnly";
+import { IoCloseCircle } from "react-icons/io5";
 
-export default function QuizControls({ cid }: { cid: string }) {
+export default function QuizControls({
+  cid,
+  publishAll,
+  unpublishAll,
+}: {
+  cid: string;
+  publishAll: () => void;
+  unpublishAll: () => void;
+}) {
   return (
     <div id="wd-quiz-controls" className="d-flex align-items-center gap-2 mb-3">
       <div className="input-group flex-grow-1">
@@ -29,16 +38,16 @@ export default function QuizControls({ cid }: { cid: string }) {
           </button>
           <ul className="dropdown-menu">
             <li>
-              <a className="dropdown-item" href="#">
+              <button className="dropdown-item" onClick={publishAll}>
                 <GreenCheckmark />
                 Publish all quizzes
-              </a>
+              </button>
             </li>
             <li>
-              <a className="dropdown-item" href="#">
-                <GreenCheckmark />
+              <button className="dropdown-item" onClick={unpublishAll}>
+                <IoCloseCircle className="me-2 text-danger" />
                 Unpublish all quizzes
-              </a>
+              </button>
             </li>
           </ul>
         </div>
