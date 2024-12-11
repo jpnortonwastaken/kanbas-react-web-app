@@ -64,7 +64,14 @@ export default function QuizDetails() {
 
       <div className="d-flex justify-content-center gap-3 mb-4">
         <FacultyOnly>
-          <button className="btn btn-primary">Preview</button>
+          <button
+            className="btn btn-primary"
+            onClick={() =>
+              navigate(`/Kanbas/Courses/${cid}/Quizzes/${qid}/attempt`)
+            }
+          >
+            Preview
+          </button>
           <button
             className="btn btn-secondary"
             onClick={() =>
@@ -75,7 +82,16 @@ export default function QuizDetails() {
           </button>
         </FacultyOnly>
 
-        {isStudent && <button className="btn btn-success">Start Quiz</button>}
+        {isStudent && (
+          <button
+            className="btn btn-success"
+            onClick={() =>
+              navigate(`/Kanbas/Courses/${cid}/Quizzes/${qid}/attempt`)
+            }
+          >
+            Start Quiz
+          </button>
+        )}
       </div>
 
       <div className="card">
