@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import * as coursesClient from "../client";
 import * as quizzesClient from "./client";
 import GreenCheckmark from "../Modules/GreenCheckmark";
+import { Link } from "react-router-dom";
 
 export default function Quizzes() {
   const { cid } = useParams();
@@ -117,7 +118,12 @@ export default function Quizzes() {
                     <BsGripVertical className="me-2 fs-3" />
                     <div>
                       <div className="fw-bold">
-                        {quiz.title}
+                        <Link
+                          to={`/Kanbas/Courses/${cid}/Quizzes/${quiz._id}`}
+                          className="text-decoration-none text-dark"
+                        >
+                          {quiz.title}
+                        </Link>
                         <FacultyOnly>
                           {quiz.published ? (
                             <GreenCheckmark

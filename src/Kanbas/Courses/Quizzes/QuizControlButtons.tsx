@@ -29,7 +29,7 @@ export default function QuizControlButtons({
       <ul className="dropdown-menu">
         <li>
           <Link
-            to={`/Kanbas/Courses/${courseId}/Quizzes/${quizId}`}
+            to={`/Kanbas/Courses/${courseId}/Quizzes/${quizId}/edit`}
             className="dropdown-item"
           >
             <FaPencil className="me-2" />
