@@ -69,6 +69,14 @@ export default function QuizDetails() {
     }
   };
 
+  // Add helper function to get total points
+  const getTotalPoints = (attempt: any) => {
+    return attempt.answers.reduce(
+      (sum: number, ans: any) => sum + ans.questionId.points,
+      0
+    );
+  };
+
   if (!quiz) return <div>Loading...</div>;
 
   return (
@@ -263,7 +271,9 @@ export default function QuizDetails() {
                       <div>
                         <h6 className="mb-1">
                           {index === 0
-                            ? `Score: ${attempt.score}`
+                            ? `Score: ${attempt.score}/${getTotalPoints(
+                                attempt
+                              )}`
                             : "Attempt completed"}
                         </h6>
                         <small className="text-muted">

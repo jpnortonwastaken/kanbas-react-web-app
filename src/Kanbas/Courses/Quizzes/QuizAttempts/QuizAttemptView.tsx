@@ -16,6 +16,7 @@ interface AttemptWithAnswers {
       question: string;
       choices?: string[];
       correctAnswer: any;
+      points: number;
     };
     answer: any;
     isCorrect: boolean;
@@ -38,6 +39,11 @@ export default function QuizAttemptView() {
     fetchAttempt();
   }, [attemptId]);
 
+  const getTotalPoints = () => {
+    if (!attempt) return 0;
+    return attempt.answers.reduce((sum, ans) => sum + ans.questionId.points, 0);
+  };
+
   const renderQuestion = (
     question: any,
     userAnswer: any,
@@ -51,7 +57,10 @@ export default function QuizAttemptView() {
               isCorrect ? "bg-success-subtle" : "bg-danger-subtle"
             }`}
           >
-            <h5>{question.title}</h5>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">{question.title}</h5>
+              <span className="text-muted">{question.points} pts</span>
+            </div>
             <p>{question.question}</p>
             {question.choices?.map((choice: string, index: number) => (
               <div key={index} className="form-check">
@@ -82,7 +91,10 @@ export default function QuizAttemptView() {
               isCorrect ? "bg-success-subtle" : "bg-danger-subtle"
             }`}
           >
-            <h5>{question.title}</h5>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">{question.title}</h5>
+              <span className="text-muted">{question.points} pts</span>
+            </div>
             <p>{question.question}</p>
             {[true, false].map((value) => (
               <div key={value.toString()} className="form-check">
@@ -113,7 +125,10 @@ export default function QuizAttemptView() {
               isCorrect ? "bg-success-subtle" : "bg-danger-subtle"
             }`}
           >
-            <h5>{question.title}</h5>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">{question.title}</h5>
+              <span className="text-muted">{question.points} pts</span>
+            </div>
             <p>{question.question}</p>
             <input
               type="text"
@@ -141,7 +156,9 @@ export default function QuizAttemptView() {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Quiz Attempt Review</h2>
         <div>
-          <p className="mb-0">Score: {attempt.score}</p>
+          <p className="mb-0">
+            Score: {attempt.score}/{getTotalPoints()}
+          </p>
           <small className="text-muted">
             Submitted: {new Date(attempt.submittedAt).toLocaleString()}
           </small>

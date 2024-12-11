@@ -76,7 +76,10 @@ export default function QuizAttempt() {
       case "MULTIPLE_CHOICE":
         return (
           <div className="mb-4">
-            <h5>{question.title}</h5>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">{question.title}</h5>
+              <span className="text-muted">{question.points} pts</span>
+            </div>
             <p>{question.question}</p>
             {question.choices?.map((choice: string, index: number) => (
               <div key={index} className="form-check">
@@ -100,7 +103,10 @@ export default function QuizAttempt() {
       case "TRUE_FALSE":
         return (
           <div className="mb-4">
-            <h5>{question.title}</h5>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">{question.title}</h5>
+              <span className="text-muted">{question.points} pts</span>
+            </div>
             <p>{question.question}</p>
             <div className="form-check">
               <input
@@ -132,7 +138,10 @@ export default function QuizAttempt() {
       case "FILL_BLANK":
         return (
           <div className="mb-4">
-            <h5>{question.title}</h5>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h5 className="mb-0">{question.title}</h5>
+              <span className="text-muted">{question.points} pts</span>
+            </div>
             <p>{question.question}</p>
             <input
               type="text"
@@ -193,21 +202,19 @@ export default function QuizAttempt() {
         };
       });
 
+      // Calculate score based on points from correct answers only
+      const earnedPoints = answersWithCorrectness.reduce((sum, a) => {
+        const question = questions.find((q) => q._id === a.questionId);
+        return sum + (a.isCorrect ? question?.points || 0 : 0);
+      }, 0);
+
       const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
-      const earnedPoints = answersWithCorrectness.reduce(
-        (sum, a) =>
-          sum +
-          (a.isCorrect
-            ? questions.find((q) => q._id === a.questionId)?.points || 0
-            : 0),
-        0
-      );
       const scorePercentage = Math.round((earnedPoints / totalPoints) * 100);
 
       const attempt = await attemptsClient.createAttempt(qid as string, {
         userId: currentUser._id,
         answers: answersWithCorrectness,
-        score: scorePercentage,
+        score: earnedPoints, // Use earned points as score instead of percentage
         startedAt: new Date().toISOString(),
         submittedAt: new Date().toISOString(),
         completed: true,
