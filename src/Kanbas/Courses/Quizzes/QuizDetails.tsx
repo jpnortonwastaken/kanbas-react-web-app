@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import * as quizzesClient from "./client";
 import { setQuiz } from "./reducer";
 import FacultyOnly from "../../Account/FacultyOnly";
+import { formatDateTime } from "./utils";
 
 export default function QuizDetails() {
   const { cid, qid } = useParams();
@@ -131,7 +132,9 @@ export default function QuizDetails() {
 
           <div className="row mb-3">
             <div className="col-3 fw-bold">Access Code</div>
-            <div className="col-9">{quiz.accessCode || "None"}</div>
+            <div className="col-9">
+              {quiz.settings?.accessCode ? quiz.settings.accessCode : "None"}
+            </div>
           </div>
 
           <div className="row mb-3">
@@ -156,18 +159,14 @@ export default function QuizDetails() {
           <div className="row mb-3">
             <div className="col-3 fw-bold">Due Date</div>
             <div className="col-9">
-              {quiz.dueDate
-                ? new Date(quiz.dueDate).toLocaleDateString()
-                : "None"}
+              {quiz.dueDate ? formatDateTime(quiz.dueDate) : "None"}
             </div>
           </div>
 
           <div className="row mb-3">
             <div className="col-3 fw-bold">Available From</div>
             <div className="col-9">
-              {quiz.availableFrom
-                ? new Date(quiz.availableFrom).toLocaleDateString()
-                : "None"}
+              {quiz.availableFrom ? formatDateTime(quiz.availableFrom) : "None"}
             </div>
           </div>
 
@@ -175,7 +174,7 @@ export default function QuizDetails() {
             <div className="col-3 fw-bold">Available Until</div>
             <div className="col-9">
               {quiz.availableUntil
-                ? new Date(quiz.availableUntil).toLocaleDateString()
+                ? formatDateTime(quiz.availableUntil)
                 : "None"}
             </div>
           </div>

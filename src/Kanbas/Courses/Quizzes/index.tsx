@@ -12,6 +12,7 @@ import * as coursesClient from "../client";
 import * as quizzesClient from "./client";
 import GreenCheckmark from "../Modules/GreenCheckmark";
 import { Link } from "react-router-dom";
+import { formatDateTime } from "./utils";
 
 export default function Quizzes() {
   const { cid } = useParams();
@@ -142,8 +143,7 @@ export default function Quizzes() {
                       </div>
                       <div className="text-muted">
                         <span className="text-danger">{quiz.type}</span> |
-                        <b> Due</b>{" "}
-                        {new Date(quiz.dueDate).toLocaleDateString()} |
+                        <b> Due</b> {formatDateTime(quiz.dueDate)} |
                         {quiz.points} pts
                       </div>
                     </div>

@@ -6,6 +6,12 @@ import { addQuiz, updateQuiz } from "./reducer";
 import * as coursesClient from "../client";
 import * as quizzesClient from "./client";
 
+const formatDateForInput = (dateString: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+};
+
 export default function QuizEditor() {
   const { cid, qid } = useParams();
   const navigate = useNavigate();
@@ -63,7 +69,12 @@ export default function QuizEditor() {
 
   useEffect(() => {
     if (quiz && qid !== "new") {
-      setFormData(quiz);
+      setFormData({
+        ...quiz,
+        dueDate: formatDateForInput(quiz.dueDate),
+        availableFrom: formatDateForInput(quiz.availableFrom),
+        availableUntil: formatDateForInput(quiz.availableUntil),
+      });
     }
   }, [quiz, qid]);
 
