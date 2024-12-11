@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import * as quizzesClient from "./client";
 import * as questionsClient from "./Questions/client";
 import FacultyOnly from "../../Account/FacultyOnly";
+import * as attemptsClient from "./QuizAttempts/client";
 
 interface Answer {
   questionId: string;
@@ -28,6 +29,8 @@ export default function QuizAttempt() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const currentUser = useSelector(
     (state: any) => state.accountReducer.currentUser
@@ -157,6 +160,68 @@ export default function QuizAttempt() {
     }
   };
 
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const answersWithCorrectness = questions.map((question) => {
+        const userAnswer = answers.find(
+          (a) => a.questionId === question._id
+        )?.answer;
+        const isCorrect = (() => {
+          switch (question.type) {
+            case "MULTIPLE_CHOICE":
+              return userAnswer === question.correctAnswer;
+            case "TRUE_FALSE":
+              return userAnswer === question.correctAnswer;
+            case "FILL_BLANK":
+              if (Array.isArray(question.correctAnswer)) {
+                return question.correctAnswer.some(
+                  (ans) =>
+                    ans.toLowerCase() === (userAnswer as string)?.toLowerCase()
+                );
+              }
+              return userAnswer === question.correctAnswer;
+          }
+        })();
+
+        return {
+          questionId: question._id,
+          answer: userAnswer,
+          isCorrect,
+        };
+      });
+
+      const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+      const earnedPoints = answersWithCorrectness.reduce(
+        (sum, a) =>
+          sum +
+          (a.isCorrect
+            ? questions.find((q) => q._id === a.questionId)?.points || 0
+            : 0),
+        0
+      );
+      const scorePercentage = Math.round((earnedPoints / totalPoints) * 100);
+
+      const attempt = await attemptsClient.createAttempt(qid as string, {
+        userId: currentUser._id,
+        answers: answersWithCorrectness,
+        score: scorePercentage,
+        startedAt: new Date().toISOString(),
+        submittedAt: new Date().toISOString(),
+        completed: true,
+      });
+
+      navigate(`/Kanbas/Courses/${cid}/Quizzes/${qid}/attempts/${attempt._id}`);
+    } catch (error) {
+      console.error("Error submitting quiz:", error);
+      setError("Failed to submit quiz. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!quiz) return <div>Loading...</div>;
 
   return (
@@ -165,9 +230,9 @@ export default function QuizAttempt() {
         <div className={showOneQuestionAtTime ? "col-md-9" : "col-12"}>
           <div className="card">
             <div className="card-body">
-              {showOneQuestionAtTime
-                ? // Single question mode
-                  questions[currentQuestionIndex] && (
+              {showOneQuestionAtTime ? (
+                <>
+                  {questions[currentQuestionIndex] && (
                     <div className="question-container">
                       {renderQuestion(questions[currentQuestionIndex])}
                       <div className="d-flex justify-content-between mt-4">
@@ -178,32 +243,41 @@ export default function QuizAttempt() {
                         >
                           Previous
                         </button>
-                        <button
-                          className="btn btn-primary"
-                          onClick={handleNext}
-                          disabled={
-                            currentQuestionIndex === questions.length - 1
-                          }
-                        >
-                          Next
-                        </button>
+                        {currentQuestionIndex === questions.length - 1 ? (
+                          <button
+                            className="btn btn-success"
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? "Submitting..." : "Submit Quiz"}
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-primary"
+                            onClick={handleNext}
+                          >
+                            Next
+                          </button>
+                        )}
                       </div>
                     </div>
-                  )
-                : // All questions mode
-                  questions.map((question) => (
+                  )}
+                </>
+              ) : (
+                <>
+                  {questions.map((question) => (
                     <div key={question._id} className="mb-4 pb-4 border-bottom">
                       {renderQuestion(question)}
                     </div>
                   ))}
-
-              {!showResults && (
-                <button
-                  className="btn btn-success mt-4"
-                  onClick={() => setShowResults(true)}
-                >
-                  Submit Quiz
-                </button>
+                  <button
+                    className="btn btn-success mt-4"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Quiz"}
+                  </button>
+                </>
               )}
             </div>
           </div>

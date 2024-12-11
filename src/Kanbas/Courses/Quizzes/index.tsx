@@ -10,6 +10,7 @@ import QuizControlButtons from "./QuizControlButtons";
 import { useState, useEffect } from "react";
 import * as coursesClient from "../client";
 import * as quizzesClient from "./client";
+import * as questionsClient from "./Questions/client";
 import GreenCheckmark from "../Modules/GreenCheckmark";
 import { Link } from "react-router-dom";
 import { formatDateTime } from "./utils";
@@ -83,9 +84,41 @@ export default function Quizzes() {
     dispatch(setQuiz(updatedQuizzes));
   };
 
+  // Add state for question counts
+  const [questionCounts, setQuestionCounts] = useState<{
+    [key: string]: number;
+  }>({});
+
+  // Add function to fetch question counts
+  const fetchQuestionCounts = async () => {
+    const counts = await Promise.all(
+      quizzes.map(async (quiz: any) => {
+        const questions = await questionsClient.findQuestionsByQuiz(quiz._id);
+        return { quizId: quiz._id, count: questions.length };
+      })
+    );
+
+    setQuestionCounts(
+      counts.reduce(
+        (acc, { quizId, count }) => ({
+          ...acc,
+          [quizId]: count,
+        }),
+        {}
+      )
+    );
+  };
+
   useEffect(() => {
     fetchQuizzes();
   }, [cid]);
+
+  // Add useEffect to fetch counts when quizzes change
+  useEffect(() => {
+    if (quizzes.length > 0) {
+      fetchQuestionCounts();
+    }
+  }, [quizzes]);
 
   return (
     <div className="wd-quizzes">
@@ -144,7 +177,8 @@ export default function Quizzes() {
                       <div className="text-muted">
                         <span className="text-danger">{quiz.type}</span> |
                         <b> Due</b> {formatDateTime(quiz.dueDate)} |
-                        {quiz.points} pts
+                        {quiz.points} pts |{questionCounts[quiz._id] || 0}{" "}
+                        questions
                       </div>
                     </div>
                   </div>

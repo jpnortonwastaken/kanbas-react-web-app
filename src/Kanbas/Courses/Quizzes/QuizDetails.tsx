@@ -1,33 +1,49 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import * as quizzesClient from "./client";
 import { setQuiz } from "./reducer";
 import FacultyOnly from "../../Account/FacultyOnly";
 import { formatDateTime } from "./utils";
+import * as attemptsClient from "./QuizAttempts/client";
 
 export default function QuizDetails() {
   const { cid, qid } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [attempts, setAttempts] = useState<any[]>([]);
+
+  const currentUser = useSelector(
+    (state: any) => state.accountReducer.currentUser
+  );
+  const isStudent = currentUser?.role === "STUDENT";
+
+  const quiz = useSelector((state: any) =>
+    state.quizzesReducer.quizzes.find((q: any) => q._id === qid)
+  );
 
   const fetchQuiz = async () => {
     const quiz = await quizzesClient.findQuizById(qid as string);
     dispatch(setQuiz([quiz]));
   };
 
+  const fetchAttempts = async () => {
+    if (isStudent && currentUser?._id) {
+      const userAttempts = await attemptsClient.findAttemptsByUser(
+        qid as string,
+        currentUser._id
+      );
+      setAttempts(userAttempts);
+    }
+  };
+
   useEffect(() => {
     fetchQuiz();
   }, [qid]);
 
-  const quiz = useSelector((state: any) =>
-    state.quizzesReducer.quizzes.find((q: any) => q._id === qid)
-  );
-
-  const currentUser = useSelector(
-    (state: any) => state.accountReducer.currentUser
-  );
-  const isStudent = currentUser?.role === "STUDENT";
+  useEffect(() => {
+    fetchAttempts();
+  }, [qid, currentUser, isStudent]);
 
   const getAvailabilityStatus = () => {
     const now = new Date();
@@ -83,14 +99,35 @@ export default function QuizDetails() {
         </FacultyOnly>
 
         {isStudent && (
-          <button
-            className="btn btn-success"
-            onClick={() =>
-              navigate(`/Kanbas/Courses/${cid}/Quizzes/${qid}/attempt`)
-            }
-          >
-            Start Quiz
-          </button>
+          <>
+            {quiz.settings?.multipleAttempts ? (
+              attempts.length < (quiz.settings?.maxAttempts || 1) ? (
+                <button
+                  className="btn btn-success"
+                  onClick={() =>
+                    navigate(`/Kanbas/Courses/${cid}/Quizzes/${qid}/attempt`)
+                  }
+                >
+                  Start Quiz
+                </button>
+              ) : (
+                <p className="text-danger">
+                  Maximum attempts ({quiz.settings.maxAttempts}) reached
+                </p>
+              )
+            ) : (
+              attempts.length === 0 && (
+                <button
+                  className="btn btn-success"
+                  onClick={() =>
+                    navigate(`/Kanbas/Courses/${cid}/Quizzes/${qid}/attempt`)
+                  }
+                >
+                  Start Quiz
+                </button>
+              )
+            )}
+          </>
         )}
       </div>
 
@@ -196,6 +233,55 @@ export default function QuizDetails() {
           </div>
         </div>
       </div>
+
+      {isStudent && (
+        <div className="mt-5">
+          <h3>Your Attempts</h3>
+          {attempts.length === 0 ? (
+            <p>No attempts yet</p>
+          ) : (
+            <div className="list-group">
+              {attempts
+                .sort(
+                  (a, b) =>
+                    new Date(b.submittedAt).getTime() -
+                    new Date(a.submittedAt).getTime()
+                )
+                .map((attempt, index) => (
+                  <button
+                    key={attempt._id}
+                    className="list-group-item list-group-item-action"
+                    onClick={() =>
+                      index === 0 &&
+                      navigate(
+                        `/Kanbas/Courses/${cid}/Quizzes/${qid}/attempts/${attempt._id}`
+                      )
+                    }
+                    disabled={index !== 0}
+                  >
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 className="mb-1">
+                          {index === 0
+                            ? `Score: ${attempt.score}`
+                            : "Attempt completed"}
+                        </h6>
+                        <small className="text-muted">
+                          Submitted: {formatDateTime(attempt.submittedAt)}
+                        </small>
+                      </div>
+                      {index === 0 && (
+                        <span className="badge bg-primary rounded-pill">
+                          View Details
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
