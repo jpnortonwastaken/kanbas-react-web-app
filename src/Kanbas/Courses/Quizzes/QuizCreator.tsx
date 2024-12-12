@@ -11,6 +11,224 @@ const formatDateForInput = (dateString: string) => {
   return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
 };
 
+interface Question {
+  _id?: string;
+  type: "MULTIPLE_CHOICE" | "TRUE_FALSE" | "FILL_BLANK";
+  title: string;
+  points: number;
+  question: string;
+  choices?: string[];
+  correctAnswer: string | number | boolean | string[];
+}
+
+const QuestionEditor = ({
+  question,
+  onSave,
+  onCancel,
+}: {
+  question: Question;
+  onSave: (q: Question) => void;
+  onCancel: () => void;
+}) => {
+  const [editData, setEditData] = useState(question);
+  const [choices, setChoices] = useState(question.choices || [""]);
+
+  const renderEditor = () => {
+    switch (editData.type) {
+      case "MULTIPLE_CHOICE":
+        return (
+          <>
+            <div className="mb-3">
+              <label>Choices</label>
+              {choices.map((choice, index) => (
+                <div key={index} className="d-flex gap-2 mb-2">
+                  <input
+                    type="radio"
+                    name="correct"
+                    checked={editData.correctAnswer === index}
+                    onChange={() =>
+                      setEditData({ ...editData, correctAnswer: index })
+                    }
+                  />
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={choice}
+                    onChange={(e) => {
+                      const newChoices = [...choices];
+                      newChoices[index] = e.target.value;
+                      setChoices(newChoices);
+                    }}
+                  />
+                  <button
+                    className="btn btn-danger"
+                    onClick={() =>
+                      setChoices(choices.filter((_, i) => i !== index))
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                className="btn btn-secondary"
+                onClick={() => setChoices([...choices, ""])}
+              >
+                Add Choice
+              </button>
+            </div>
+          </>
+        );
+
+      case "TRUE_FALSE":
+        return (
+          <div className="mb-3">
+            <div className="form-check">
+              <input
+                type="radio"
+                className="form-check-input"
+                checked={editData.correctAnswer === true}
+                onChange={() =>
+                  setEditData({ ...editData, correctAnswer: true })
+                }
+              />
+              <label className="form-check-label">True</label>
+            </div>
+            <div className="form-check">
+              <input
+                type="radio"
+                className="form-check-input"
+                checked={editData.correctAnswer === false}
+                onChange={() =>
+                  setEditData({ ...editData, correctAnswer: false })
+                }
+              />
+              <label className="form-check-label">False</label>
+            </div>
+          </div>
+        );
+
+      case "FILL_BLANK":
+        return (
+          <div className="mb-3">
+            <label>Correct Answers</label>
+            {(editData.correctAnswer as string[]).map((answer, index) => (
+              <div key={index} className="d-flex gap-2 mb-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  value={answer}
+                  onChange={(e) => {
+                    const newAnswers = [
+                      ...(editData.correctAnswer as string[]),
+                    ];
+                    newAnswers[index] = e.target.value;
+                    setEditData({ ...editData, correctAnswer: newAnswers });
+                  }}
+                />
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    const newAnswers = (
+                      editData.correctAnswer as string[]
+                    ).filter((_, i) => i !== index);
+                    setEditData({ ...editData, correctAnswer: newAnswers });
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              className="btn btn-secondary"
+              onClick={() =>
+                setEditData({
+                  ...editData,
+                  correctAnswer: [...(editData.correctAnswer as string[]), ""],
+                })
+              }
+            >
+              Add Answer
+            </button>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="card mb-3">
+      <div className="card-body">
+        <div className="mb-3">
+          <label>Question Type</label>
+          <select
+            className="form-control"
+            value={editData.type}
+            onChange={(e) =>
+              setEditData({
+                ...editData,
+                type: e.target.value as Question["type"],
+                correctAnswer:
+                  e.target.value === "FILL_BLANK"
+                    ? [""]
+                    : e.target.value === "TRUE_FALSE"
+                    ? false
+                    : 0,
+              })
+            }
+          >
+            <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+            <option value="TRUE_FALSE">True/False</option>
+            <option value="FILL_BLANK">Fill in the Blank</option>
+          </select>
+        </div>
+
+        <div className="mb-3">
+          <label>Title</label>
+          <input
+            type="text"
+            className="form-control"
+            value={editData.title}
+            onChange={(e) =>
+              setEditData({ ...editData, title: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="mb-3">
+          <label>Points</label>
+          <input
+            type="number"
+            className="form-control"
+            value={editData.points}
+            onChange={(e) =>
+              setEditData({ ...editData, points: Number(e.target.value) })
+            }
+          />
+        </div>
+
+        <div className="mb-3">
+          <label>Question</label>
+          <textarea
+            className="form-control"
+            value={editData.question}
+            onChange={(e) =>
+              setEditData({ ...editData, question: e.target.value })
+            }
+          />
+        </div>
+
+        {renderEditor()}
+
+        <div className="d-flex gap-2">
+          <button className="btn btn-danger" onClick={onCancel}>
+            Delete Question
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function QuizCreator() {
   const { cid } = useParams();
   const navigate = useNavigate();
@@ -40,12 +258,15 @@ export default function QuizCreator() {
     published: false,
   });
 
+  const [questions, setQuestions] = useState<Question[]>([]);
+
   const handleSubmit = async (shouldPublish = false) => {
     try {
       const newQuiz = {
         ...formData,
         courseId: cid,
         published: shouldPublish,
+        questions, // Add questions to quiz data
       };
       const quiz = await quizzesClient.createQuiz(cid as string, newQuiz);
       dispatch(addQuiz(quiz));
@@ -381,7 +602,42 @@ export default function QuizCreator() {
 
       {activeTab === "questions" && (
         <div>
-          <h3>Questions Editor</h3>
+          <div className="d-flex justify-content-between mb-4">
+            <h3>Questions</h3>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                const newQuestion: Question = {
+                  type: "MULTIPLE_CHOICE",
+                  title: "New Question",
+                  points: 1,
+                  question: "",
+                  choices: [""],
+                  correctAnswer: 0,
+                };
+                setQuestions([...questions, newQuestion]);
+              }}
+            >
+              Add Question
+            </button>
+          </div>
+
+          {questions.map((question, index) => (
+            <QuestionEditor
+              key={index}
+              question={question}
+              onSave={(updatedQuestion) => {
+                const newQuestions = [...questions];
+                newQuestions[index] = updatedQuestion;
+                setQuestions(newQuestions);
+              }}
+              onCancel={() => {
+                const newQuestions = [...questions];
+                newQuestions.splice(index, 1);
+                setQuestions(newQuestions);
+              }}
+            />
+          ))}
         </div>
       )}
     </div>
