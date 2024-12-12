@@ -236,6 +236,12 @@ export default function QuizEditor() {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("details");
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [totalPoints, setTotalPoints] = useState(0);
+
+  useEffect(() => {
+    const total = questions.reduce((sum, q) => sum + q.points, 0);
+    setTotalPoints(total);
+  }, [questions]);
 
   const saveQuiz = async (shouldPublish = false) => {
     const updatedQuiz = {
@@ -647,8 +653,11 @@ export default function QuizEditor() {
 
       {activeTab === "questions" && (
         <div>
-          <div className="d-flex justify-content-between mb-4">
-            <h3>Questions</h3>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h3 className="mb-0">Questions</h3>
+              <small className="text-muted">Total Points: {totalPoints}</small>
+            </div>
             <button
               className="btn btn-primary"
               onClick={() => {

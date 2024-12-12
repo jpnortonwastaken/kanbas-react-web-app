@@ -24,19 +24,19 @@ interface Question {
 
 const QuestionEditor = ({
   question,
-  onUpdate, // Changed from onSave
-  onDelete, // Changed from onCancel
+  onSave, // Change back to onSave
+  onCancel, // Change back to onCancel
 }: {
   question: Question;
-  onUpdate: (q: Question) => void;
-  onDelete: () => void;
+  onSave: (q: Question) => void;
+  onCancel: () => void;
 }) => {
   const [editData, setEditData] = useState(question);
   const [choices, setChoices] = useState(question.choices || [""]);
 
   // Auto-update parent when data changes
   useEffect(() => {
-    onUpdate({
+    onSave({
       ...editData,
       choices: choices,
       correctAnswer:
@@ -235,8 +235,14 @@ const QuestionEditor = ({
         {renderEditor()}
 
         <div className="d-flex gap-2">
-          <button className="btn btn-danger" onClick={onDelete}>
-            Delete Question
+          <button
+            className="btn btn-primary"
+            onClick={() => onSave({ ...editData, choices })}
+          >
+            Save Question
+          </button>
+          <button className="btn btn-secondary" onClick={onCancel}>
+            Cancel
           </button>
         </div>
       </div>
@@ -254,7 +260,6 @@ export default function QuizCreator() {
     title: "New Quiz",
     description: "",
     type: "GRADED_QUIZ",
-    points: "100",
     assignmentGroup: "Quizzes",
     settings: {
       shuffleAnswers: true,
@@ -274,6 +279,19 @@ export default function QuizCreator() {
   });
 
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [totalPoints, setTotalPoints] = useState(0);
+
+  useEffect(() => {
+    const total = questions.reduce((sum, q) => sum + q.points, 0);
+    setTotalPoints(total);
+  }, [questions]);
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      points: totalPoints,
+    }));
+  }, [totalPoints]);
 
   const handleSubmit = async (shouldPublish = false) => {
     try {
@@ -374,13 +392,15 @@ export default function QuizCreator() {
           <div className="mb-3">
             <label className="form-label">Points</label>
             <input
-              type="number"
+              type="text"
               className="form-control"
-              value={formData.points}
-              onChange={(e) =>
-                setFormData({ ...formData, points: e.target.value })
-              }
+              value={totalPoints}
+              disabled
+              placeholder="Total points from questions"
             />
+            <small className="text-muted">
+              Points are calculated from question totals
+            </small>
           </div>
 
           <div className="mb-3">
@@ -629,8 +649,11 @@ export default function QuizCreator() {
 
       {activeTab === "questions" && (
         <div>
-          <div className="d-flex justify-content-between mb-4">
-            <h3>Questions</h3>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h3 className="mb-0">Questions</h3>
+              <small className="text-muted">Total Points: {totalPoints}</small>
+            </div>
             <button
               className="btn btn-primary"
               onClick={() => {
@@ -653,12 +676,12 @@ export default function QuizCreator() {
             <QuestionEditor
               key={index}
               question={question}
-              onUpdate={(updatedQuestion) => {
+              onSave={(updatedQuestion) => {
                 const newQuestions = [...questions];
                 newQuestions[index] = updatedQuestion;
                 setQuestions(newQuestions);
               }}
-              onDelete={() => {
+              onCancel={() => {
                 const newQuestions = [...questions];
                 newQuestions.splice(index, 1);
                 setQuestions(newQuestions);

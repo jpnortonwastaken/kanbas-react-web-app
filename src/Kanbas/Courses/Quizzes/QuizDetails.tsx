@@ -6,12 +6,14 @@ import { setQuiz } from "./reducer";
 import FacultyOnly from "../../Account/FacultyOnly";
 import { formatDateTime } from "./utils";
 import * as attemptsClient from "./QuizAttempts/client";
+import * as questionsClient from "./Questions/client"; // Add this import
 
 export default function QuizDetails() {
   const { cid, qid } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [attempts, setAttempts] = useState<any[]>([]);
+  const [questionCount, setQuestionCount] = useState(0);
 
   const currentUser = useSelector(
     (state: any) => state.accountReducer.currentUser
@@ -37,6 +39,17 @@ export default function QuizDetails() {
     }
   };
 
+  const fetchQuestionCount = async () => {
+    try {
+      const questions = await questionsClient.findQuestionsByQuiz(
+        qid as string
+      );
+      setQuestionCount(questions.length);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+    }
+  };
+
   useEffect(() => {
     fetchQuiz();
   }, [qid]);
@@ -44,6 +57,12 @@ export default function QuizDetails() {
   useEffect(() => {
     fetchAttempts();
   }, [qid, currentUser, isStudent]);
+
+  useEffect(() => {
+    if (qid) {
+      fetchQuestionCount();
+    }
+  }, [qid]);
 
   const getAvailabilityStatus = () => {
     const now = new Date();
@@ -141,6 +160,11 @@ export default function QuizDetails() {
 
       <div className="card">
         <div className="card-body">
+          <div className="row mb-3">
+            <div className="col-3 fw-bold">Number of Questions</div>
+            <div className="col-9">{questionCount}</div>
+          </div>
+
           <div className="row mb-3">
             <div className="col-3 fw-bold">Quiz Type</div>
             <div className="col-9">{quiz.type || "GRADED_QUIZ"}</div>
