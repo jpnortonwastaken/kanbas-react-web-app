@@ -33,3 +33,10 @@ export const deleteQuestion = async (questionId: string) => {
   const response = await axios.delete(`${API_BASE}/questions/${questionId}`);
   return response.data;
 };
+
+export const deleteQuestionsByQuiz = async (quizId: string) => {
+  const response = await axios.delete(
+    `${API_BASE}/quizzes/${quizId}/questions`
+  );
+  return response.data;
+};

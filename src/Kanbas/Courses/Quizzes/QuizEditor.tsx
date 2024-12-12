@@ -35,6 +35,20 @@ const QuestionEditor = ({
   const [editData, setEditData] = useState(question);
   const [choices, setChoices] = useState(question.choices || [""]);
 
+  // Add auto-save effect like in QuizCreator
+  useEffect(() => {
+    onSave({
+      ...editData,
+      choices: choices,
+      correctAnswer:
+        editData.type === "MULTIPLE_CHOICE"
+          ? editData.correctAnswer
+          : editData.type === "TRUE_FALSE"
+          ? editData.correctAnswer
+          : editData.correctAnswer || [""],
+    });
+  }, [editData, choices]);
+
   const renderEditor = () => {
     switch (editData.type) {
       case "MULTIPLE_CHOICE":
@@ -322,6 +336,7 @@ export default function QuizEditor() {
   // Update handleSubmit to handle question updates
   const handleSubmit = async (shouldPublish = false) => {
     try {
+      // First update the quiz
       const updatedQuiz = {
         ...formData,
         _id: qid,
@@ -330,22 +345,17 @@ export default function QuizEditor() {
       await quizzesClient.updateQuiz(updatedQuiz);
       dispatch(updateQuiz(updatedQuiz));
 
-      // Update questions
+      // Delete all existing questions
+      await questionsClient.deleteQuestionsByQuiz(qid as string);
+
+      // Create all questions as new
       await Promise.all(
         questions.map(async (question) => {
-          if (question._id) {
-            // Update existing question
-            await questionsClient.updateQuestion(question._id, {
-              ...question,
-              quizId: qid,
-            });
-          } else {
-            // Create new question
-            await questionsClient.createQuestion(qid as string, {
-              ...question,
-              quizId: qid,
-            });
-          }
+          const { _id, ...questionData } = question; // Remove _id to treat as new
+          return questionsClient.createQuestion(qid as string, {
+            ...questionData,
+            quizId: qid,
+          });
         })
       );
 
@@ -355,7 +365,7 @@ export default function QuizEditor() {
           : `/Kanbas/Courses/${cid}/Quizzes/${qid}`
       );
     } catch (error) {
-      console.error("Error saving quiz:", error);
+      console.error("Error updating quiz:", error);
     }
   };
 
