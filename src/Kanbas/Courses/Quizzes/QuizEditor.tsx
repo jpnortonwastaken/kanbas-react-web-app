@@ -259,6 +259,13 @@ export default function QuizEditor() {
     setTotalPoints(total);
   }, [questions]);
 
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      points: totalPoints.toString(),
+    }));
+  }, [totalPoints]);
+
   const saveQuiz = async (shouldPublish = false) => {
     const updatedQuiz = {
       ...formData,
@@ -436,13 +443,15 @@ export default function QuizEditor() {
           <div className="mb-3">
             <label className="form-label">Points</label>
             <input
-              type="number"
+              type="text"
               className="form-control"
-              value={formData.points}
-              onChange={(e) =>
-                setFormData({ ...formData, points: e.target.value })
-              }
+              value={totalPoints}
+              disabled
+              placeholder="Total points from questions"
             />
+            <small className="text-muted">
+              Points are calculated from question totals
+            </small>
           </div>
 
           <div className="mb-3">
