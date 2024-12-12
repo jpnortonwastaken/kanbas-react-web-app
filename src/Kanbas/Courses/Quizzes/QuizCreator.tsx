@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { addQuiz } from "./reducer";
 import * as quizzesClient from "./client";
+import * as questionsClient from "./Questions/client"; // Add this import
 
 const formatDateForInput = (dateString: string) => {
   if (!dateString) return "";
@@ -23,15 +24,29 @@ interface Question {
 
 const QuestionEditor = ({
   question,
-  onSave,
-  onCancel,
+  onUpdate, // Changed from onSave
+  onDelete, // Changed from onCancel
 }: {
   question: Question;
-  onSave: (q: Question) => void;
-  onCancel: () => void;
+  onUpdate: (q: Question) => void;
+  onDelete: () => void;
 }) => {
   const [editData, setEditData] = useState(question);
   const [choices, setChoices] = useState(question.choices || [""]);
+
+  // Auto-update parent when data changes
+  useEffect(() => {
+    onUpdate({
+      ...editData,
+      choices: choices,
+      correctAnswer:
+        editData.type === "MULTIPLE_CHOICE"
+          ? editData.correctAnswer
+          : editData.type === "TRUE_FALSE"
+          ? editData.correctAnswer
+          : editData.correctAnswer || [""],
+    });
+  }, [editData, choices]);
 
   const renderEditor = () => {
     switch (editData.type) {
@@ -220,7 +235,7 @@ const QuestionEditor = ({
         {renderEditor()}
 
         <div className="d-flex gap-2">
-          <button className="btn btn-danger" onClick={onCancel}>
+          <button className="btn btn-danger" onClick={onDelete}>
             Delete Question
           </button>
         </div>
@@ -262,21 +277,33 @@ export default function QuizCreator() {
 
   const handleSubmit = async (shouldPublish = false) => {
     try {
+      // First create the quiz
       const newQuiz = {
         ...formData,
         courseId: cid,
         published: shouldPublish,
-        questions, // Add questions to quiz data
       };
       const quiz = await quizzesClient.createQuiz(cid as string, newQuiz);
       dispatch(addQuiz(quiz));
+
+      // Validate and create questions
+      await Promise.all(
+        questions.map(async (question) => {
+          if (!question.question || question.question.trim() === "") {
+            question.question = "New Question"; // Set default if empty
+          }
+          const { _id, ...questionData } = question;
+          return questionsClient.createQuestion(quiz._id, questionData);
+        })
+      );
+
       navigate(
         shouldPublish
           ? `/Kanbas/Courses/${cid}/Quizzes`
           : `/Kanbas/Courses/${cid}/Quizzes/${quiz._id}`
       );
     } catch (error) {
-      console.error("Error creating quiz:", error);
+      console.error("Error creating quiz and questions:", error);
     }
   };
 
@@ -626,12 +653,12 @@ export default function QuizCreator() {
             <QuestionEditor
               key={index}
               question={question}
-              onSave={(updatedQuestion) => {
+              onUpdate={(updatedQuestion) => {
                 const newQuestions = [...questions];
                 newQuestions[index] = updatedQuestion;
                 setQuestions(newQuestions);
               }}
-              onCancel={() => {
+              onDelete={() => {
                 const newQuestions = [...questions];
                 newQuestions.splice(index, 1);
                 setQuestions(newQuestions);

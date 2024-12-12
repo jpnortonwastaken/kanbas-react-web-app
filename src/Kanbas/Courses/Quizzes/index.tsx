@@ -89,24 +89,41 @@ export default function Quizzes() {
     [key: string]: number;
   }>({});
 
-  // Add function to fetch question counts
+  // Update fetchQuestionCounts function
   const fetchQuestionCounts = async () => {
-    const counts = await Promise.all(
-      quizzes.map(async (quiz: any) => {
-        const questions = await questionsClient.findQuestionsByQuiz(quiz._id);
-        return { quizId: quiz._id, count: questions.length };
-      })
-    );
+    try {
+      const counts = await Promise.all(
+        quizzes.map(async (quiz: any) => {
+          if (!quiz._id) {
+            return { quizId: quiz._id, count: 0 };
+          }
+          try {
+            const questions = await questionsClient.findQuestionsByQuiz(
+              quiz._id
+            );
+            return { quizId: quiz._id, count: questions.length };
+          } catch (error) {
+            console.error(
+              `Error fetching questions for quiz ${quiz._id}:`,
+              error
+            );
+            return { quizId: quiz._id, count: 0 };
+          }
+        })
+      );
 
-    setQuestionCounts(
-      counts.reduce(
-        (acc, { quizId, count }) => ({
-          ...acc,
-          [quizId]: count,
-        }),
-        {}
-      )
-    );
+      setQuestionCounts(
+        counts.reduce(
+          (acc, { quizId, count }) => ({
+            ...acc,
+            [quizId]: count,
+          }),
+          {}
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching question counts:", error);
+    }
   };
 
   useEffect(() => {
