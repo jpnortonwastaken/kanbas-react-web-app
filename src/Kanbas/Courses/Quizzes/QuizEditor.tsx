@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { addQuiz, updateQuiz } from "./reducer";
 import * as coursesClient from "../client";
 import * as quizzesClient from "./client";
+import * as questionsClient from "./Questions/client";
 
 const formatDateForInput = (dateString: string) => {
   if (!dateString) return "";
@@ -230,6 +231,7 @@ const QuestionEditor = ({
   );
 };
 
+// QuizEditor.tsx - Add question fetching
 export default function QuizEditor() {
   const { cid, qid } = useParams();
   const navigate = useNavigate();
@@ -292,6 +294,19 @@ export default function QuizEditor() {
     published: false,
   });
 
+  // Add question fetching
+  const fetchQuestions = async () => {
+    if (qid) {
+      try {
+        const fetchedQuestions = await questionsClient.findQuestionsByQuiz(qid);
+        setQuestions(fetchedQuestions);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+      }
+    }
+  };
+
+  // Update useEffect to fetch questions when quiz loads
   useEffect(() => {
     if (quiz && qid !== "new") {
       setFormData({
@@ -300,32 +315,45 @@ export default function QuizEditor() {
         availableFrom: formatDateForInput(quiz.availableFrom),
         availableUntil: formatDateForInput(quiz.availableUntil),
       });
+      fetchQuestions(); // Add this line to fetch questions
     }
   }, [quiz, qid]);
 
+  // Update handleSubmit to handle question updates
   const handleSubmit = async (shouldPublish = false) => {
     try {
-      const newQuiz = {
+      const updatedQuiz = {
         ...formData,
-        courseId: cid,
-        published: shouldPublish,
-        questions, // Add questions to quiz data
+        _id: qid,
+        published: shouldPublish ? true : formData.published,
       };
-      if (qid === "new") {
-        await createQuizForCourse(shouldPublish);
-        navigate(
-          shouldPublish
-            ? `/Kanbas/Courses/${cid}/Quizzes`
-            : `/Kanbas/Courses/${cid}/Quizzes/${qid}`
-        );
-      } else {
-        await saveQuiz(shouldPublish);
-        navigate(
-          shouldPublish
-            ? `/Kanbas/Courses/${cid}/Quizzes`
-            : `/Kanbas/Courses/${cid}/Quizzes/${qid}`
-        );
-      }
+      await quizzesClient.updateQuiz(updatedQuiz);
+      dispatch(updateQuiz(updatedQuiz));
+
+      // Update questions
+      await Promise.all(
+        questions.map(async (question) => {
+          if (question._id) {
+            // Update existing question
+            await questionsClient.updateQuestion(question._id, {
+              ...question,
+              quizId: qid,
+            });
+          } else {
+            // Create new question
+            await questionsClient.createQuestion(qid as string, {
+              ...question,
+              quizId: qid,
+            });
+          }
+        })
+      );
+
+      navigate(
+        shouldPublish
+          ? `/Kanbas/Courses/${cid}/Quizzes`
+          : `/Kanbas/Courses/${cid}/Quizzes/${qid}`
+      );
     } catch (error) {
       console.error("Error saving quiz:", error);
     }
